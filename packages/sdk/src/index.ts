@@ -1712,8 +1712,7 @@ export class SupraClient {
         "code",
         "publish_package_txn",
         [],
-        [BCS.bcsSerializeBytes(packageMetadata), codeSerializer.getBytes()],
-        optionalTransactionArgs?.optionalTransactionPayloadArgs,
+        [BCS.bcsSerializeBytes(packageMetadata), codeSerializer.getBytes()],        optionalTransactionArgs?.optionalTransactionPayloadArgs,
       ),
     );
 
