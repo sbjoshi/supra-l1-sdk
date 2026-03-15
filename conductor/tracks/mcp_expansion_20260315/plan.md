@@ -3,7 +3,7 @@
 ## Phase 1: Account Management Tools
 - [x] Task: Define `generate_account` tool interface and implement using `SupraAccount` (from SDK core). [2f42b08]
 - [x] Task: Define `derive_account` tool interface (mnemonics/private key) and implement using `SupraAccount`. [19e55f4]
-- [ ] Task: Write tests for account generation and derivation.
+- [x] Task: Write tests for account generation and derivation. [19e55f4]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Account Management Tools' (Protocol in workflow.md)
 
 ## Phase 2: Transaction Building Tools
