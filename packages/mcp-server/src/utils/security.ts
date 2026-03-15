@@ -26,8 +26,8 @@ export function getPassphrase(title: string = "Enter Passphrase"): string {
     } else {
       throw new Error(`Unsupported platform for GUI prompts: ${process.platform}`);
     }
-  } catch (error: any) {
-    throw new Error(`Failed to get passphrase via GUI: ${error.message}`);
+  } catch (error: unknown) {
+    throw new Error(`Failed to get passphrase via GUI: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

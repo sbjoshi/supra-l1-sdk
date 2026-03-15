@@ -3,6 +3,7 @@ import {
   BCS,
   HexString,
   SupraAccount,
+  type SupraAccount as SupraAccountType,
   AnyRawTransaction,
 } from "supra-l1-sdk-core";
 import axios, { AxiosResponse, HttpStatusCode } from "axios";
@@ -375,7 +376,7 @@ export class SupraClient {
     return coinChangeParsed;
   }
 
-  public getTransactionInsights(
+  getTransactionInsights(
     userAddress: string,
     txData: any,
   ): TransactionInsights {
@@ -891,7 +892,7 @@ export class SupraClient {
    * @returns ed25519 signature in `HexString`
    */
   static signSupraTransaction(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     rawTxn: AnyRawTransaction,
   ): HexString {
     return senderAccount.signBuffer(
@@ -907,7 +908,7 @@ export class SupraClient {
    * @returns signer authenticator
    */
   static signSupraMultiTransaction(
-    signer: SupraAccount,
+    signer: SupraAccountType,
     rawTxn:
       | TxnBuilderTypes.MultiAgentRawTransaction
       | TxnBuilderTypes.FeePayerRawTransaction,
@@ -1042,7 +1043,7 @@ export class SupraClient {
    * @returns `SendTxPayload`
    */
   getSendTxPayload(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     rawTxn: TxnBuilderTypes.RawTransaction,
   ): SendTxPayload {
     return {
@@ -1069,7 +1070,7 @@ export class SupraClient {
    * @returns `TransactionResponse`
    */
   async sendTxUsingSerializedRawTransaction(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     serializedRawTransaction: Uint8Array,
     enableTransactionWaitAndSimulationArgs?: EnableTransactionWaitAndSimulationArgs,
   ): Promise<TransactionResponse> {
@@ -1554,7 +1555,7 @@ export class SupraClient {
    * @returns `SignedTransaction`
    */
   static createSignedTransaction(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     rawTxn: TxnBuilderTypes.RawTransaction,
   ): TxnBuilderTypes.SignedTransaction {
     return new TxnBuilderTypes.SignedTransaction(
@@ -1603,7 +1604,7 @@ export class SupraClient {
    * @returns `TransactionResponse`
    */
   async transferSupraCoin(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     receiverAccountAddr: HexString,
     amount: bigint,
     optionalTransactionArgs?: OptionalTransactionArgs,
@@ -1653,7 +1654,7 @@ export class SupraClient {
    * @returns `TransactionResponse`
    */
   async transferCoin(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     receiverAccountAddr: HexString,
     amount: bigint,
     coinType: string,
@@ -1688,7 +1689,7 @@ export class SupraClient {
    * @returns `TransactionResponse`
    */
   async publishPackage(
-    senderAccount: SupraAccount,
+    senderAccount: SupraAccountType,
     packageMetadata: Uint8Array,
     modulesCode: Uint8Array[],
     optionalTransactionArgs?: OptionalTransactionArgs,

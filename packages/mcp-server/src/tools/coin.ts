@@ -15,7 +15,7 @@ export const transferCoinTool: McpTool = {
     },
     required: ["senderPrivateKey", "receiverAddress", "amount", "coinType"],
   },
-  handler: async (args: any) => {
+  handler: async (args: Record<string, unknown>) => {
     const { senderPrivateKey, receiverAddress, amount, coinType, rpcUrl = "https://rpc-testnet.supra.com/" } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const senderAccount = new SupraAccount(

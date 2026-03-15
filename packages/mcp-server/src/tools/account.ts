@@ -16,7 +16,7 @@ export const generateAccountTool: McpTool = {
     },
     required: ["mnemonicPath", "keyFilePath"],
   },
-  handler: async (args: any) => {
+  handler: async (args: Record<string, unknown>) => {
     const { mnemonicPath, keyFilePath } = args;
     
     // Get passphrase via side-channel GUI
@@ -60,7 +60,7 @@ export const importAccountTool: McpTool = {
     },
     required: ["keyFilePath"],
   },
-  handler: async (args: any) => {
+  handler: async (args: Record<string, unknown>) => {
     const { mnemonic, privateKey, keyFilePath, derivationPath = "m/44'/637'/0'/0'/0'" } = args;
     let account: SupraAccount;
 
@@ -104,7 +104,7 @@ export const fundAccountTool: McpTool = {
     },
     required: ["address", "rpcUrl"],
   },
-  handler: async (args: any) => {
+  handler: async (args: Record<string, unknown>) => {
     const { address, rpcUrl } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const result = await supraClient.fundAccountWithFaucet(new HexString(address));

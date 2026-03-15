@@ -15,7 +15,11 @@ export const transactionInsightsResource: McpResource = {
     }
     const hash = match[1];
     const supraClient = await SupraClient.init(RPC_URL);
-    const insights = await supraClient.getTransactionInsights(hash);
+    const txDetail = await supraClient.getTransactionDetail(hash);
+    if (!txDetail) {
+      throw new Error(`Transaction not found: ${hash}`);
+    }
+    const insights = supraClient.getTransactionInsights(txDetail.sender, txDetail);
     return JSON.stringify(insights, null, 2);
   },
 };

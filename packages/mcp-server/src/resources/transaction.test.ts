@@ -6,7 +6,8 @@ vi.mock("@supra-l1/sdk", () => {
   return {
     SupraClient: {
       init: vi.fn().mockResolvedValue({
-        getTransactionInsights: vi.fn().mockResolvedValue({ tx_type: 'UserTransaction' }),
+        getTransactionDetail: vi.fn().mockResolvedValue({ sender: '0x123' }),
+        getTransactionInsights: vi.fn().mockReturnValue({ tx_type: 'UserTransaction' }),
       }),
     },
     SupraAccount: vi.fn().mockImplementation(function() { return {}; }),
@@ -30,7 +31,7 @@ describe('transaction resources', () => {
 
       expect(SupraClient.init).toHaveBeenCalled();
       const mockClient = await SupraClient.init('https://rpc-testnet.supra.com/');
-      expect(mockClient.getTransactionInsights).toHaveBeenCalledWith('0x123');
+      expect(mockClient.getTransactionInsights).toHaveBeenCalledWith('0x123', expect.any(Object));
       expect(JSON.parse(result)).toEqual({ tx_type: 'UserTransaction' });
     });
 
