@@ -2,62 +2,60 @@
 
 A Model Context Protocol (MCP) server for the Supra L1 SDK, allowing AI agents to interact with the Supra blockchain.
 
+## Security Model: Zero-Knowledge & Side-Channel GUI
+
+This server implements a **Zero-Knowledge Security Model**. Private keys and mnemonics are never shared with the LLM or stored in the conversation history. 
+
+### How it works:
+1. **Side-Channel Input**: When a tool requires a passphrase to decrypt a key, the server triggers a **GUI Popup** on your operating system (bypassing the terminal/stdio).
+2. **Encrypted Storage**: Private keys are stored locally in encrypted `.pem` files using AES-256.
+3. **OS Dependencies**:
+   - **Linux**: Requires `zenity` installed.
+   - **macOS**: Uses built-in `osascript`.
+   - **Windows**: Uses built-in `PowerShell`.
+
 ## Overview
 
 This server provides tools and resources to:
-- Transfer coins between accounts.
-- Publish Move packages and modules.
-- Simulate transactions to estimate gas and effects.
-- Sign raw transactions and generate transaction hashes.
-- Inspect account information and resources.
-- Get detailed insights into transactions.
+- **Securely manage accounts** without exposing secrets to AI.
+- **Fund accounts** via the Supra testnet faucet.
+- **Build, sign, and submit** complex Move transactions.
+- **Inspect** account information and transaction insights.
 
 ## Setup
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- npm or yarn
+- **Linux Users**: `sudo apt install zenity`
 
 ### Installation
-1. Clone the repository:
+1. Clone and install:
    ```bash
    git clone https://github.com/your-repo/supra-l1-sdk.git
    cd supra-l1-sdk
-   ```
-2. Install dependencies:
-   ```bash
    npm install
    ```
-3. Build the MCP server:
+2. Build:
    ```bash
-   npm run build -w @supra-l1/mcp-server
+   npm run build
    ```
-
-### Configuration for Claude Desktop
-Add the following to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "supra-l1": {
-      "command": "node",
-      "args": ["/path/to/supra-l1-sdk/packages/mcp-server/dist/index.js"]
-    }
-  }
-}
-```
 
 ## Usage
 
 ### Tools
 
-| Tool | Description | Parameters |
+| Tool | Description | Key Parameters |
 |------|-------------|------------|
-| `transfer_coin` | Transfer coins | `senderPrivateKey`, `receiverAddress`, `amount`, `coinType`, `rpcUrl` |
-| `publish_package` | Publish Move packages | `senderPrivateKey`, `packageMetadata`, `modulesCode`, `rpcUrl` |
-| `simulate_transaction` | Simulate a transaction | `serializedRawTransaction`, `senderPublicKey`, `rpcUrl` |
-| `sign_transaction` | Sign a raw transaction | `senderPrivateKey`, `serializedRawTransaction` |
-| `generate_transaction_hash` | Generate transaction hash | `senderPrivateKey`, `serializedRawTransaction` |
+| `generate_account` | Create new account | `mnemonicPath`, `keyFilePath` |
+| `import_account` | Secure existing account | `mnemonic`/`privateKey`, `keyFilePath` |
+| `fund_account` | Request testnet tokens | `address`, `rpcUrl` |
+| `create_entry_function_tx` | Build entry function tx | `keyFilePath`, `moduleAddr`, `functionArgs` (typed) |
+| `create_script_tx` | Build script tx | `keyFilePath`, `scriptCode`, `scriptArgs` (typed) |
+| `sign_transaction` | Sign a raw transaction | `keyFilePath`, `serializedRawTransaction` |
+| `submit_transaction` | Submit signed tx | `serializedRawTransaction`, `signature`, `rpcUrl` |
+| `generate_transaction_hash` | Get tx hash | `keyFilePath`, `serializedRawTransaction` |
+
+> **Note on `functionArgs` / `scriptArgs`**: Arguments must be typed objects, e.g., `[{"type": "address", "value": "0x..."}, {"type": "u64", "value": "1000"}]`.
 
 ### Resources
 
@@ -69,12 +67,7 @@ Add the following to your `claude_desktop_config.json`:
 
 ## Development
 
-Run the server in development mode:
 ```bash
-npm run dev -w @supra-l1/mcp-server
-```
-
-Run tests:
-```bash
+npm run build
 npm test -w @supra-l1/mcp-server
 ```
