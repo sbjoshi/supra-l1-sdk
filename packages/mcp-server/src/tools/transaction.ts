@@ -18,6 +18,25 @@ function getDecryptedAccount(keyFilePath: string): SupraAccount {
   );
 }
 
+function serializeArgs(args: any[]): Uint8Array[] {
+  return args.map(arg => {
+    const { type, value } = arg;
+    switch (type.toLowerCase()) {
+      case 'u8': return BCS.bcsSerializeU8(Number(value));
+      case 'u16': return BCS.bcsSerializeU16(Number(value));
+      case 'u32': return BCS.bcsSerializeU32(Number(value));
+      case 'u64': return BCS.bcsSerializeUint64(BigInt(value));
+      case 'u128': return BCS.bcsSerializeU128(BigInt(value));
+      case 'u256': return BCS.bcsSerializeU256(BigInt(value));
+      case 'bool': return BCS.bcsSerializeBool(Boolean(value));
+      case 'address': return BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(value));
+      case 'string': return BCS.bcsSerializeStr(value);
+      case 'hex': return BCS.bcsSerializeBytes(Uint8Array.from(Buffer.from(value.replace("0x", ""), "hex")));
+      default: throw new Error(`Unsupported argument type for serialization: ${type}`);
+    }
+  });
+}
+
 export const simulateTransactionTool: McpTool = {
   name: "simulate_transaction",
   description: "Simulate a transaction to estimate gas and effects",
@@ -57,7 +76,18 @@ export const createEntryFunctionTxTool: McpTool = {
       moduleName: { type: "string", description: "Target module name" },
       functionName: { type: "string", description: "Target function name" },
       typeArgs: { type: "array", items: { type: "string" }, description: "Type arguments" },
-      functionArgs: { type: "array", items: { type: "string" }, description: "Function arguments (as strings)" },
+      functionArgs: { 
+        type: "array", 
+        items: { 
+          type: "object",
+          properties: {
+            type: { type: "string", description: "Argument type (u8, u64, address, etc.)" },
+            value: { type: "string", description: "Argument value" }
+          },
+          required: ["type", "value"]
+        }, 
+        description: "Typed function arguments" 
+      },
       rpcUrl: { type: "string", description: "Supra RPC URL" },
     },
     required: ["keyFilePath", "moduleAddr", "moduleName", "functionName", "functionArgs", "rpcUrl"],
@@ -68,19 +98,22 @@ export const createEntryFunctionTxTool: McpTool = {
     const supraClient = await SupraClient.init(rpcUrl);
     const accountInfo = await supraClient.getAccountInfo(account.address());
     
+    const bcsArgs = serializeArgs(functionArgs);
+    
     const serializedRawTx = await supraClient.createSerializedRawTxObject(
       account.address(),
       BigInt(accountInfo.sequence_number),
       moduleAddr,
       moduleName,
       functionName,
-      typeArgs,
-      functionArgs
+      typeArgs.map((t: string) => new TxnBuilderTypes.TypeTagParser(t).parseTypeTag()),
+      bcsArgs
     );
 
     return {
       serializedRawTransaction: Buffer.from(serializedRawTx).toString("hex"),
       senderAddress: account.address().toString(),
+      sequenceNumber: accountInfo.sequence_number.toString(),
     };
   },
 };
@@ -94,7 +127,18 @@ export const createScriptTxTool: McpTool = {
       keyFilePath: { type: "string", description: "Path to the encrypted private key PEM file" },
       scriptCode: { type: "string", description: "Move script bytecode (hex)" },
       typeArgs: { type: "array", items: { type: "string" }, description: "Type arguments" },
-      scriptArgs: { type: "array", items: { type: "object" }, description: "Script arguments (JSON objects)" },
+      scriptArgs: { 
+        type: "array", 
+        items: { 
+          type: "object",
+          properties: {
+            type: { type: "string", description: "Argument type (u8, u64, address, etc.)" },
+            value: { type: "string", description: "Argument value" }
+          },
+          required: ["type", "value"]
+        }, 
+        description: "Typed script arguments" 
+      },
       rpcUrl: { type: "string", description: "Supra RPC URL" },
     },
     required: ["keyFilePath", "scriptCode", "rpcUrl"],
@@ -105,17 +149,34 @@ export const createScriptTxTool: McpTool = {
     const supraClient = await SupraClient.init(rpcUrl);
     const accountInfo = await supraClient.getAccountInfo(account.address());
 
+    // Scripts in SDK use a different argument format (TransactionArgument variant objects)
+    const bcsScriptArgs = scriptArgs.map((arg: any) => {
+      const { type, value } = arg;
+      switch (type.toLowerCase()) {
+        case 'u8': return new TxnBuilderTypes.TransactionArgumentU8(Number(value));
+        case 'u32': return new TxnBuilderTypes.TransactionArgumentU32(Number(value));
+        case 'u64': return new TxnBuilderTypes.TransactionArgumentU64(BigInt(value));
+        case 'u128': return new TxnBuilderTypes.TransactionArgumentU128(BigInt(value));
+        case 'u256': return new TxnBuilderTypes.TransactionArgumentU256(BigInt(value));
+        case 'bool': return new TxnBuilderTypes.TransactionArgumentBool(Boolean(value));
+        case 'address': return new TxnBuilderTypes.TransactionArgumentAddress(TxnBuilderTypes.AccountAddress.fromHex(value));
+        case 'u8vector': return new TxnBuilderTypes.TransactionArgumentU8Vector(Uint8Array.from(Buffer.from(value.replace("0x", ""), "hex")));
+        default: throw new Error(`Unsupported script argument type: ${type}`);
+      }
+    });
+
     const serializedRawTx = supraClient.createSerializedScriptTxPayloadRawTxObject(
       account.address(),
       BigInt(accountInfo.sequence_number),
       Uint8Array.from(Buffer.from(scriptCode.replace("0x", ""), "hex")),
-      typeArgs,
-      scriptArgs
+      typeArgs.map((t: string) => new TxnBuilderTypes.TypeTagParser(t).parseTypeTag()),
+      bcsScriptArgs
     );
 
     return {
       serializedRawTransaction: Buffer.from(serializedRawTx).toString("hex"),
       senderAddress: account.address().toString(),
+      sequenceNumber: accountInfo.sequence_number.toString(),
     };
   },
 };
@@ -134,7 +195,14 @@ export const signTransactionTool: McpTool = {
   handler: async (args: any) => {
     const { keyFilePath, serializedRawTransaction } = args;
     const account = getDecryptedAccount(keyFilePath);
-    const signature = account.signHexString(serializedRawTransaction);
+    
+    // Proper signing requires prepending the salt
+    const rawTx = TxnBuilderTypes.RawTransaction.deserialize(
+      new BCS.Deserializer(Uint8Array.from(Buffer.from(serializedRawTransaction.replace("0x", ""), "hex")))
+    );
+    const signatureMessage = SupraClient.getSupraTransactionSignatureMessage(rawTx);
+    const signature = account.signBuffer(signatureMessage);
+    
     return {
       signature: signature.toString(),
       publicKey: account.pubKey().toString(),
@@ -163,10 +231,8 @@ export const submit_transaction_tool: McpTool = {
       new HexString(signature),
       Uint8Array.from(Buffer.from(serializedRawTransaction.replace("0x", ""), "hex")),
       {
-        enableTransactionWaitAndSimulationArgs: {
-          enableWaitForTransaction: true,
-          enableTransactionSimulation: false,
-        },
+        enableWaitForTransaction: true,
+        enableTransactionSimulation: false,
       }
     );
     return result;

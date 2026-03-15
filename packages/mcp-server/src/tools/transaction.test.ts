@@ -32,7 +32,7 @@ vi.mock("@supra-l1/sdk", () => {
   const mockAccount = {
     address: vi.fn().mockReturnValue({ toString: () => "0xaddress" }),
     toPrivateKeyObject: vi.fn().mockReturnValue({ address: "0xaddress" }),
-    signHexString: vi.fn().mockReturnValue({ toString: () => "0xsignature" }),
+    signBuffer: vi.fn().mockReturnValue({ toString: () => "0xsignature" }),
     pubKey: vi.fn().mockReturnValue({ toString: () => "0xpubkey" }),
   };
 
@@ -47,16 +47,35 @@ vi.mock("@supra-l1/sdk", () => {
   return {
     SupraClient: {
       init: vi.fn().mockResolvedValue(mockClient),
+      getSupraTransactionSignatureMessage: vi.fn().mockReturnValue(new Uint8Array([7, 8, 9])),
+      createSignedTransaction: vi.fn().mockReturnValue({}),
+      deriveTransactionHash: vi.fn().mockReturnValue('0xhash'),
     },
     SupraAccount: MockSupraAccount,
     HexString: MockHexString,
     TxnBuilderTypes: {
       RawTransaction: {
         deserialize: vi.fn().mockReturnValue({}),
+      },
+      TypeTagParser: vi.fn().mockImplementation(() => ({
+        parseTypeTag: vi.fn().mockReturnValue({}),
+      })),
+      AccountAddress: {
+        fromHex: vi.fn().mockReturnValue({}),
       }
     },
     BCS: {
       Deserializer: vi.fn(),
+      bcsSerializeU8: vi.fn(),
+      bcsSerializeU16: vi.fn(),
+      bcsSerializeU32: vi.fn(),
+      bcsSerializeUint64: vi.fn(),
+      bcsSerializeU128: vi.fn(),
+      bcsSerializeU256: vi.fn(),
+      bcsSerializeBool: vi.fn(),
+      bcsSerializeStr: vi.fn(),
+      bcsSerializeBytes: vi.fn(),
+      bcsToBytes: vi.fn(),
     }
   };
 });
@@ -66,18 +85,31 @@ describe('createEntryFunctionTxTool', () => {
     vi.clearAllMocks();
   });
 
-  it('should build entry function tx using key file', async () => {
+  it('should have correct tool definition', () => {
+    expect(createEntryFunctionTxTool.name).toBe('create_entry_function_tx');
+    expect(createEntryFunctionTxTool.inputSchema.properties).toHaveProperty('keyFilePath');
+  });
+
+  it('should build entry function tx using key file and typed args', async () => {
     const args = {
       keyFilePath: 'key.pem',
       moduleAddr: '0x1',
       moduleName: 'supra_account',
       functionName: 'transfer',
-      functionArgs: ['0x2', '1000'],
+      functionArgs: [
+        { type: 'address', value: '0x2' },
+        { type: 'u64', value: '1000' }
+      ],
       rpcUrl: 'http://localhost'
     };
 
     const result = await createEntryFunctionTxTool.handler(args);
+
+    expect(fs.readFileSync).toHaveBeenCalledWith('key.pem', 'utf8');
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(security.decrypt).toHaveBeenCalled();
     expect(result).toHaveProperty('serializedRawTransaction');
+    expect(result).toHaveProperty('sequenceNumber', '10');
   });
 });
 
@@ -86,7 +118,7 @@ describe('signTransactionTool', () => {
     vi.clearAllMocks();
   });
 
-  it('should sign a raw transaction', async () => {
+  it('should sign a raw transaction with salt', async () => {
     const args = {
       keyFilePath: 'key.pem',
       serializedRawTransaction: '0x123'

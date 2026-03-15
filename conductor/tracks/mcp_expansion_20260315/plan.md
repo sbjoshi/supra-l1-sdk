@@ -25,7 +25,7 @@
 - [x] Task: Implement `sign_transaction` (standalone) using GUI prompt decryption. [c8a4111]
 - [x] Task: Implement `submit_transaction` for previously signed transactions. [c8a4111]
 - [x] Task: Write tests for the full secure workflow. [c8a4111]
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Secure Signing and Submission' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Secure Signing and Submission' (Protocol in workflow.md) [c8a4111]
 
 ## Phase 4: Finalization & Documentation
 - [ ] Task: Update MCP server `README.md` with security model details and OS dependencies (zenity, etc.).
