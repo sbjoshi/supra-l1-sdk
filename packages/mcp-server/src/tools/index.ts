@@ -5,6 +5,8 @@ import {
   simulateTransactionTool,
   signTransactionTool,
   generateTransactionHashTool,
+  createEntryFunctionTxTool,
+  createScriptTxTool,
 } from "./transaction.js";
 
 export const tools = [
@@ -15,4 +17,6 @@ export const tools = [
   simulateTransactionTool,
   signTransactionTool,
   generateTransactionHashTool,
+  createEntryFunctionTxTool,
+  createScriptTxTool,
 ];

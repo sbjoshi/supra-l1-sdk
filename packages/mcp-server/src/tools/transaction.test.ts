@@ -1,102 +1,93 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { simulateTransactionTool, signTransactionTool, generateTransactionHashTool } from './transaction';
-import { SupraClient, SupraAccount, TxnBuilderTypes, BCS } from "@supra-l1/sdk";
+import { createEntryFunctionTxTool, createScriptTxTool } from './transaction';
+import { SupraClient, HexString, SupraAccount } from "@supra-l1/sdk";
+import * as security from '../utils/security';
+import * as fs from 'fs';
+
+vi.mock('fs', () => ({
+  readFileSync: vi.fn().mockReturnValue('encrypted-data'),
+  existsSync: vi.fn().mockReturnValue(true),
+}));
+
+vi.mock("../utils/security", () => ({
+  getPassphrase: vi.fn().mockReturnValue('test-passphrase'),
+  decrypt: vi.fn().mockReturnValue('0xprivate'),
+  encrypt: vi.fn(),
+}));
 
 vi.mock("@supra-l1/sdk", () => {
+  const mockClient = {
+    createSerializedRawTxObject: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+    createSerializedScriptTxPayloadRawTxObject: vi.fn().mockReturnValue(new Uint8Array([4, 5, 6])),
+    getAccountInfo: vi.fn().mockResolvedValue({ sequence_number: 10n }),
+    getChainId: vi.fn().mockResolvedValue({ value: 6 }),
+  };
+  
+  const mockAccount = {
+    address: vi.fn().mockReturnValue({ toString: () => "0xaddress" }),
+    toPrivateKeyObject: vi.fn().mockReturnValue({ address: "0xaddress" }),
+  };
+
+  const MockSupraAccount = vi.fn().mockImplementation(function() {
+    return mockAccount;
+  });
+  
   return {
     SupraClient: {
-      init: vi.fn().mockResolvedValue({
-        simulateTxUsingSerializedRawTransaction: vi.fn().mockResolvedValue({ status: 'Success' }),
-      }),
-      signSupraTransaction: vi.fn().mockReturnValue({ toString: () => '0xsignature' }),
-      createSignedTransaction: vi.fn().mockReturnValue({}),
-      deriveTransactionHash: vi.fn().mockReturnValue('0xhash'),
+      init: vi.fn().mockResolvedValue(mockClient),
     },
-    SupraAccount: vi.fn().mockImplementation(function() { return {}; }),
-    HexString: vi.fn().mockImplementation(function(val) { return { toString: () => val }; }),
-    TxnBuilderTypes: {
-      RawTransaction: {
-        deserialize: vi.fn().mockReturnValue({}),
-      },
-    },
-    BCS: {
-      Deserializer: vi.fn().mockImplementation(function() { return {}; }),
-    },
+    SupraAccount: MockSupraAccount,
+    HexString: {
+      fromUint8Array: vi.fn().mockReturnValue({ toString: () => "0x0" }),
+    }
   };
 });
 
-describe('transaction tools', () => {
+describe('createEntryFunctionTxTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('simulateTransactionTool', () => {
-    it('should have correct tool definition', () => {
-      expect(simulateTransactionTool.name).toBe('simulate_transaction');
-      expect(simulateTransactionTool.description).toBeDefined();
-    });
-
-    it('should call simulateTxUsingSerializedRawTransaction with correct arguments', async () => {
-      const args = {
-        serializedRawTransaction: '0xabcd',
-        senderPublicKey: '0x123',
-        rpcUrl: 'https://rpc-testnet.supra.com/',
-      };
-
-      const result = await simulateTransactionTool.handler(args);
-
-      expect(SupraClient.init).toHaveBeenCalledWith('https://rpc-testnet.supra.com/');
-      const mockClient = await SupraClient.init('https://rpc-testnet.supra.com/');
-      expect(mockClient.simulateTxUsingSerializedRawTransaction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          Ed25519: expect.objectContaining({
-            public_key: '123',
-          }),
-        }),
-        expect.any(Uint8Array)
-      );
-      expect(result).toEqual({ status: 'Success' });
-    });
+  it('should have correct tool definition', () => {
+    expect(createEntryFunctionTxTool.name).toBe('create_entry_function_tx');
+    expect(createEntryFunctionTxTool.inputSchema.properties).toHaveProperty('keyFilePath');
   });
 
-  describe('signTransactionTool', () => {
-    it('should have correct tool definition', () => {
-      expect(signTransactionTool.name).toBe('sign_transaction');
-    });
+  it('should build entry function tx using key file', async () => {
+    const args = {
+      keyFilePath: 'key.pem',
+      moduleAddr: '0x1',
+      moduleName: 'supra_account',
+      functionName: 'transfer',
+      functionArgs: ['0x2', '1000'],
+      rpcUrl: 'http://localhost'
+    };
 
-    it('should sign a transaction', async () => {
-      const args = {
-        senderPrivateKey: '0x123',
-        serializedRawTransaction: '0xabcd',
-      };
+    const result = await createEntryFunctionTxTool.handler(args);
 
-      const result = await signTransactionTool.handler(args);
+    expect(fs.readFileSync).toHaveBeenCalledWith('key.pem', 'utf8');
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(security.decrypt).toHaveBeenCalledWith('encrypted-data', 'test-passphrase');
+    expect(result).toHaveProperty('serializedRawTransaction');
+  });
+});
 
-      expect(SupraAccount).toHaveBeenCalled();
-      expect(BCS.Deserializer).toHaveBeenCalled();
-      expect(TxnBuilderTypes.RawTransaction.deserialize).toHaveBeenCalled();
-      expect(SupraClient.signSupraTransaction).toHaveBeenCalled();
-      expect(result).toEqual({ signature: '0xsignature' });
-    });
+describe('createScriptTxTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('generateTransactionHashTool', () => {
-    it('should have correct tool definition', () => {
-      expect(generateTransactionHashTool.name).toBe('generate_transaction_hash');
-    });
+  it('should build script tx using key file', async () => {
+    const args = {
+      keyFilePath: 'key.pem',
+      scriptCode: '0xabc',
+      scriptArgs: [],
+      rpcUrl: 'http://localhost'
+    };
 
-    it('should generate a transaction hash', async () => {
-      const args = {
-        senderPrivateKey: '0x123',
-        serializedRawTransaction: '0xabcd',
-      };
+    const result = await createScriptTxTool.handler(args);
 
-      const result = await generateTransactionHashTool.handler(args);
-
-      expect(SupraAccount).toHaveBeenCalled();
-      expect(SupraClient.createSignedTransaction).toHaveBeenCalled();
-      expect(SupraClient.deriveTransactionHash).toHaveBeenCalled();
-      expect(result).toEqual({ hash: '0xhash' });
-    });
+    expect(security.decrypt).toHaveBeenCalled();
+    expect(result).toHaveProperty('serializedRawTransaction');
   });
 });

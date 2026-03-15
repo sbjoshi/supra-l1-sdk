@@ -13,10 +13,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Secure Account Management' (Protocol in workflow.md) [fca9722]
 
 ## Phase 2: Secure Transaction Building
-- [ ] Task: Define `create_entry_function_tx` tool interface using `keyFilePath`.
-- [ ] Task: Define `create_script_tx` tool interface using `keyFilePath`.
-- [ ] Task: Implement signing logic that decrypts the PEM file via GUI prompt.
-- [ ] Task: Write tests for secure transaction building.
+- [x] Task: Define `create_entry_function_tx` tool interface using `keyFilePath`. [fca9722]
+- [x] Task: Define `create_script_tx` tool interface using `keyFilePath`. [fca9722]
+- [x] Task: Implement signing logic that decrypts the PEM file via GUI prompt. [fca9722]
+- [x] Task: Write tests for secure transaction building. [fca9722]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Secure Transaction Building' (Protocol in workflow.md)
 
 ## Phase 3: Secure Signing and Submission
