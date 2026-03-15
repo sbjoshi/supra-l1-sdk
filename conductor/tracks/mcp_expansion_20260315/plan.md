@@ -1,25 +1,32 @@
-# Implementation Plan: MCP Server Expansion - Account & Transaction Tools
+# Implementation Plan: MCP Server Expansion - Secure Account & Transaction Tools
 
-## Phase 1: Account Management Tools
-- [x] Task: Define `generate_account` tool interface and implement using `SupraAccount` (from SDK core). [2f42b08]
-- [x] Task: Define `derive_account` tool interface (mnemonics/private key) and implement using `SupraAccount`. [19e55f4]
-- [x] Task: Write tests for account generation and derivation. [19e55f4]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Account Management Tools' (Protocol in workflow.md)
+## Phase 0: Security Utilities
+- [x] Task: Implement OS detection and GUI passphrase prompt utility (Linux/macOS/Windows). [cb80417]
+- [x] Task: Implement Encryption/Decryption utility (AES-256) for securing PEM files. [cb80417]
+- [x] Task: Write unit tests for security utilities. [cb80417]
+- [ ] Task: Conductor - User Manual Verification 'Phase 0: Security Utilities' (Protocol in workflow.md)
 
-## Phase 2: Transaction Building Tools
-- [ ] Task: Define `create_entry_function_tx` tool interface and implement using `SupraClient.createSerializedRawTxObject`.
-- [ ] Task: Define `create_script_tx` tool interface and implement using `SupraClient.createSerializedScriptTxPayloadRawTxObject`.
-- [ ] Task: Write tests for transaction building with various parameters (max gas, expiration, etc.).
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Transaction Building Tools' (Protocol in workflow.md)
+## Phase 1: Secure Account Management
+- [ ] Task: Refactor `generate_account` to prompt for passphrase, save mnemonic to file, and save encrypted private key to PEM.
+- [ ] Task: Implement `import_account` to convert existing mnemonics/keys into secured PEM files.
+- [ ] Task: Update unit tests to verify zero-knowledge (no secrets in return objects).
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Secure Account Management' (Protocol in workflow.md)
 
-## Phase 3: Signing and Submission Tools
-- [ ] Task: Define `sign_transaction` tool interface and implement using `SupraAccount` and `SupraClient`.
-- [ ] Task: Define `submit_transaction` tool interface and implement using `SupraClient.sendTxUsingSerializedRawTransactionAndSignature`.
-- [ ] Task: Write tests for the full sign-and-submit workflow.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Signing and Submission Tools' (Protocol in workflow.md)
+## Phase 2: Secure Transaction Building
+- [ ] Task: Define `create_entry_function_tx` tool interface using `keyFilePath`.
+- [ ] Task: Define `create_script_tx` tool interface using `keyFilePath`.
+- [ ] Task: Implement signing logic that decrypts the PEM file via GUI prompt.
+- [ ] Task: Write tests for secure transaction building.
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Secure Transaction Building' (Protocol in workflow.md)
+
+## Phase 3: Secure Signing and Submission
+- [ ] Task: Implement `sign_transaction` (standalone) using GUI prompt decryption.
+- [ ] Task: Implement `submit_transaction` for previously signed transactions.
+- [ ] Task: Write tests for the full secure workflow.
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Secure Signing and Submission' (Protocol in workflow.md)
 
 ## Phase 4: Finalization & Documentation
-- [ ] Task: Update MCP server `README.md` with descriptions and examples for all new tools.
-- [ ] Task: Perform manual verification using an MCP client (e.g., Claude Desktop).
+- [ ] Task: Update MCP server `README.md` with security model details and OS dependencies (zenity, etc.).
+- [ ] Task: Perform manual verification across different operating systems.
 - [ ] Task: Conduct a final code review pass.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Finalization & Documentation' (Protocol in workflow.md)
