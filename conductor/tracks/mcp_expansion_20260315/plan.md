@@ -29,6 +29,6 @@
 
 ## Phase 4: Finalization & Documentation
 - [x] Task: Update MCP server `README.md` with security model details and OS dependencies (zenity, etc.). [8b59ba5]
-- [ ] Task: Perform manual verification across different operating systems.
-- [ ] Task: Conduct a final code review pass.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Finalization & Documentation' (Protocol in workflow.md)
+- [x] Task: Perform manual verification across different operating systems. [d38307d]
+- [x] Task: Conduct a final code review pass. [d38307d]
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Finalization & Documentation' (Protocol in workflow.md) [d38307d]
