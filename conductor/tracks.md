@@ -9,6 +9,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Expand MCP server with account management and flexible transaction tools.**
+- [x] **Track: Expand MCP server with account management and flexible transaction tools.**
   *Link: [./tracks/mcp_expansion_20260315/](./tracks/mcp_expansion_20260315/)*
 
