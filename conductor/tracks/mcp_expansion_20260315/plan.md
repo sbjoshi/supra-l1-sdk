@@ -7,9 +7,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 0: Security Utilities' (Protocol in workflow.md) [c277359]
 
 ## Phase 1: Secure Account Management
-- [ ] Task: Refactor `generate_account` to prompt for passphrase, save mnemonic to file, and save encrypted private key to PEM.
-- [ ] Task: Implement `import_account` to convert existing mnemonics/keys into secured PEM files.
-- [ ] Task: Update unit tests to verify zero-knowledge (no secrets in return objects).
+- [x] Task: Refactor `generate_account` to prompt for passphrase, save mnemonic to file, and save encrypted private key to PEM. [19e55f4]
+- [x] Task: Implement `import_account` to convert existing mnemonics/keys into secured PEM files. [19e55f4]
+- [x] Task: Update unit tests to verify zero-knowledge (no secrets in return objects). [19e55f4]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Secure Account Management' (Protocol in workflow.md)
 
 ## Phase 2: Secure Transaction Building

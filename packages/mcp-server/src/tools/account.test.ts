@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateAccountTool, deriveAccountTool } from './account';
+import { generateAccountTool, importAccountTool } from './account';
 import { SupraAccount } from "@supra-l1/sdk";
+import * as security from '../utils/security';
+import * as fs from 'fs';
+
+vi.mock('fs', () => ({
+  writeFileSync: vi.fn(),
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+}));
+
+vi.mock("../utils/security", () => ({
+  getPassphrase: vi.fn().mockReturnValue('test-passphrase'),
+  encrypt: vi.fn().mockReturnValue('encrypted-data'),
+  decrypt: vi.fn(),
+}));
 
 vi.mock("@scure/bip39", () => ({
   generateMnemonic: vi.fn().mockReturnValue('test mnemonic'),
@@ -27,7 +41,10 @@ vi.mock("@supra-l1/sdk", () => {
   MockSupraAccount.fromDerivePath = vi.fn().mockReturnValue(mockAccount);
   
   return {
-    SupraAccount: MockSupraAccount
+    SupraAccount: MockSupraAccount,
+    HexString: {
+      fromUint8Array: vi.fn().mockReturnValue({ toString: () => "0x0" })
+    }
   };
 });
 
@@ -38,51 +55,70 @@ describe('generateAccountTool', () => {
 
   it('should have correct tool definition', () => {
     expect(generateAccountTool.name).toBe('generate_account');
-    expect(generateAccountTool.description).toBe('Generate a new Supra account');
-    expect(generateAccountTool.inputSchema).toBeDefined();
+    expect(generateAccountTool.inputSchema.properties).toHaveProperty('mnemonicPath');
+    expect(generateAccountTool.inputSchema.properties).toHaveProperty('keyFilePath');
   });
 
-  it('should return a new account with address and private key', async () => {
-    const result = await generateAccountTool.handler({});
+  it('should generate account and save to files without returning secrets', async () => {
+    const args = {
+      mnemonicPath: 'mnemonic.txt',
+      keyFilePath: 'key.pem'
+    };
 
-    expect(SupraAccount.fromDerivePath).toHaveBeenCalled();
+    const result = await generateAccountTool.handler(args);
+
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(security.encrypt).toHaveBeenCalledWith('0xprivate', 'test-passphrase');
+    expect(fs.writeFileSync).toHaveBeenCalledWith('mnemonic.txt', 'test mnemonic');
+    expect(fs.writeFileSync).toHaveBeenCalledWith('key.pem', 'encrypted-data');
+    
     expect(result).toHaveProperty('address', '0xaddress');
-    expect(result).toHaveProperty('privateKey', '0xprivate');
-    expect(result).toHaveProperty('mnemonic');
-    expect(result.mnemonic).toBe('test mnemonic');
+    expect(result).not.toHaveProperty('privateKey');
+    expect(result).not.toHaveProperty('mnemonic');
+    expect(result).toHaveProperty('mnemonicPath', 'mnemonic.txt');
+    expect(result).toHaveProperty('keyFilePath', 'key.pem');
   });
 });
 
-describe('deriveAccountTool', () => {
+describe('importAccountTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should have correct tool definition', () => {
-    expect(deriveAccountTool.name).toBe('derive_account');
-    expect(deriveAccountTool.description).toBe('Derive a Supra account from a mnemonic or private key');
-    expect(deriveAccountTool.inputSchema).toBeDefined();
+    expect(importAccountTool.name).toBe('import_account');
+    expect(importAccountTool.inputSchema.properties).toHaveProperty('keyFilePath');
   });
 
-  it('should derive from mnemonic', async () => {
+  it('should import from mnemonic and save encrypted PEM', async () => {
     const args = {
       mnemonic: 'test mnemonic',
+      keyFilePath: 'imported.pem'
     };
 
-    const result = await deriveAccountTool.handler(args);
+    const result = await importAccountTool.handler(args);
 
-    expect(SupraAccount.fromDerivePath).toHaveBeenCalledWith("m/44'/637'/0'/0'/0'", 'test mnemonic');
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(SupraAccount.fromDerivePath).toHaveBeenCalled();
+    expect(security.encrypt).toHaveBeenCalled();
+    expect(fs.writeFileSync).toHaveBeenCalledWith('imported.pem', 'encrypted-data');
+    
     expect(result).toHaveProperty('address', '0xaddress');
+    expect(result).not.toHaveProperty('privateKey');
   });
 
-  it('should derive from private key', async () => {
+  it('should import from private key and save encrypted PEM', async () => {
     const args = {
       privateKey: '0xprivate',
+      keyFilePath: 'imported.pem'
     };
 
-    const result = await deriveAccountTool.handler(args);
+    const result = await importAccountTool.handler(args);
 
-    expect(SupraAccount).toHaveBeenCalled();
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(security.encrypt).toHaveBeenCalledWith('0xprivate', 'test-passphrase');
+    expect(fs.writeFileSync).toHaveBeenCalledWith('imported.pem', 'encrypted-data');
+    
     expect(result).toHaveProperty('address', '0xaddress');
   });
 });

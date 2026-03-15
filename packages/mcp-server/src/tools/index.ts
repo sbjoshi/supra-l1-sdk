@@ -1,5 +1,5 @@
 import { transferCoinTool } from "./coin.js";
-import { generateAccountTool, deriveAccountTool } from "./account.js";
+import { generateAccountTool, importAccountTool } from "./account.js";
 import { publishPackageTool } from "./package.js";
 import {
   simulateTransactionTool,
@@ -10,7 +10,7 @@ import {
 export const tools = [
   transferCoinTool,
   generateAccountTool,
-  deriveAccountTool,
+  importAccountTool,
   publishPackageTool,
   simulateTransactionTool,
   signTransactionTool,
