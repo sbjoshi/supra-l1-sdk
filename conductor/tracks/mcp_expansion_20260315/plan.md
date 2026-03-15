@@ -4,7 +4,7 @@
 - [x] Task: Implement OS detection and GUI passphrase prompt utility (Linux/macOS/Windows). [cb80417]
 - [x] Task: Implement Encryption/Decryption utility (AES-256) for securing PEM files. [cb80417]
 - [x] Task: Write unit tests for security utilities. [cb80417]
-- [ ] Task: Conductor - User Manual Verification 'Phase 0: Security Utilities' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 0: Security Utilities' (Protocol in workflow.md) [c277359]
 
 ## Phase 1: Secure Account Management
 - [ ] Task: Refactor `generate_account` to prompt for passphrase, save mnemonic to file, and save encrypted private key to PEM.
