@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateAccountTool, importAccountTool } from './account';
-import { SupraAccount } from "@supra-l1/sdk";
+import { generateAccountTool, importAccountTool, fundAccountTool } from './account';
+import { SupraAccount, SupraClient, HexString } from "@supra-l1/sdk";
 import * as security from '../utils/security';
 import * as fs from 'fs';
 
@@ -34,17 +34,26 @@ vi.mock("@supra-l1/sdk", () => {
     })
   };
   
+  const mockClient = {
+    fundAccountWithFaucet: vi.fn().mockResolvedValue({ status: 'Success' }),
+  };
+
   const MockSupraAccount = vi.fn().mockImplementation(function() {
     return mockAccount;
   });
   // @ts-ignore
   MockSupraAccount.fromDerivePath = vi.fn().mockReturnValue(mockAccount);
   
+  const MockHexString = vi.fn().mockImplementation(function(val) {
+    return { toString: () => val };
+  });
+  
   return {
     SupraAccount: MockSupraAccount,
-    HexString: {
-      fromUint8Array: vi.fn().mockReturnValue({ toString: () => "0x0" })
-    }
+    SupraClient: {
+      init: vi.fn().mockResolvedValue(mockClient),
+    },
+    HexString: MockHexString
   };
 });
 
@@ -120,5 +129,23 @@ describe('importAccountTool', () => {
     expect(fs.writeFileSync).toHaveBeenCalledWith('imported.pem', 'encrypted-data');
     
     expect(result).toHaveProperty('address', '0xaddress');
+  });
+});
+
+describe('fundAccountTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should request tokens from faucet', async () => {
+    const args = {
+      address: '0xaddress',
+      rpcUrl: 'http://localhost'
+    };
+
+    const result = await fundAccountTool.handler(args);
+
+    expect(SupraClient.init).toHaveBeenCalledWith('http://localhost');
+    expect(result).toEqual({ status: 'Success' });
   });
 });

@@ -1,4 +1,4 @@
-import { SupraAccount } from "@supra-l1/sdk";
+import { SupraAccount, SupraClient, HexString } from "@supra-l1/sdk";
 import { McpTool } from "../server.js";
 import * as bip39 from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
@@ -90,5 +90,24 @@ export const importAccountTool: McpTool = {
       keyFilePath: keyFilePath,
       message: "Account imported and saved to encrypted PEM file."
     };
+  },
+};
+
+export const fundAccountTool: McpTool = {
+  name: "fund_account",
+  description: "Request testnet tokens from the Supra faucet for a given address",
+  inputSchema: {
+    type: "object",
+    properties: {
+      address: { type: "string", description: "Supra account address (hex)" },
+      rpcUrl: { type: "string", description: "Supra RPC URL" },
+    },
+    required: ["address", "rpcUrl"],
+  },
+  handler: async (args: any) => {
+    const { address, rpcUrl } = args;
+    const supraClient = await SupraClient.init(rpcUrl);
+    const result = await supraClient.fundAccountWithFaucet(new HexString(address));
+    return result;
   },
 };
