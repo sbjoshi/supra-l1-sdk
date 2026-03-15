@@ -1,7 +1,7 @@
 # Implementation Plan: MCP Server Expansion - Account & Transaction Tools
 
 ## Phase 1: Account Management Tools
-- [ ] Task: Define `generate_account` tool interface and implement using `SupraAccount` (from SDK core).
+- [x] Task: Define `generate_account` tool interface and implement using `SupraAccount` (from SDK core). [2f42b08]
 - [ ] Task: Define `derive_account` tool interface (mnemonics/private key) and implement using `SupraAccount`.
 - [ ] Task: Write tests for account generation and derivation.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Account Management Tools' (Protocol in workflow.md)
