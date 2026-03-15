@@ -7,6 +7,7 @@ import {
   generateTransactionHashTool,
   createEntryFunctionTxTool,
   createScriptTxTool,
+  submit_transaction_tool,
 } from "./transaction.js";
 
 export const tools = [
@@ -20,4 +21,5 @@ export const tools = [
   generateTransactionHashTool,
   createEntryFunctionTxTool,
   createScriptTxTool,
+  submit_transaction_tool,
 ];

@@ -1,4 +1,4 @@
-import { SupraClient, SupraAccount, HexString } from "@supra-l1/sdk";
+import { SupraClient, SupraAccount, HexString, TxnBuilderTypes, BCS } from "@supra-l1/sdk";
 import { McpTool } from "../server.js";
 import * as fs from 'fs';
 import { getPassphrase, decrypt } from '../utils/security.js';
@@ -70,7 +70,7 @@ export const createEntryFunctionTxTool: McpTool = {
     
     const serializedRawTx = await supraClient.createSerializedRawTxObject(
       account.address(),
-      Number(accountInfo.sequence_number),
+      BigInt(accountInfo.sequence_number),
       moduleAddr,
       moduleName,
       functionName,
@@ -107,7 +107,7 @@ export const createScriptTxTool: McpTool = {
 
     const serializedRawTx = supraClient.createSerializedScriptTxPayloadRawTxObject(
       account.address(),
-      Number(accountInfo.sequence_number),
+      BigInt(accountInfo.sequence_number),
       Uint8Array.from(Buffer.from(scriptCode.replace("0x", ""), "hex")),
       typeArgs,
       scriptArgs
@@ -122,7 +122,7 @@ export const createScriptTxTool: McpTool = {
 
 export const signTransactionTool: McpTool = {
   name: "sign_transaction",
-  description: "Sign a raw transaction",
+  description: "Sign a raw transaction using a secured PEM file",
   inputSchema: {
     type: "object",
     properties: {
@@ -142,6 +142,37 @@ export const signTransactionTool: McpTool = {
   },
 };
 
+export const submit_transaction_tool: McpTool = {
+  name: "submit_transaction",
+  description: "Submit a signed transaction to the Supra RPC node",
+  inputSchema: {
+    type: "object",
+    properties: {
+      serializedRawTransaction: { type: "string", description: "The serialized raw transaction (hex)" },
+      signature: { type: "string", description: "The transaction signature (hex)" },
+      senderPublicKey: { type: "string", description: "The public key of the sender (hex)" },
+      rpcUrl: { type: "string", description: "Supra RPC URL" },
+    },
+    required: ["serializedRawTransaction", "signature", "senderPublicKey", "rpcUrl"],
+  },
+  handler: async (args: any) => {
+    const { serializedRawTransaction, signature, senderPublicKey, rpcUrl } = args;
+    const supraClient = await SupraClient.init(rpcUrl);
+    const result = await supraClient.sendTxUsingSerializedRawTransactionAndSignature(
+      new HexString(senderPublicKey),
+      new HexString(signature),
+      Uint8Array.from(Buffer.from(serializedRawTransaction.replace("0x", ""), "hex")),
+      {
+        enableTransactionWaitAndSimulationArgs: {
+          enableWaitForTransaction: true,
+          enableTransactionSimulation: false,
+        },
+      }
+    );
+    return result;
+  },
+};
+
 export const generateTransactionHashTool: McpTool = {
   name: "generate_transaction_hash",
   description: "Generate transaction hash",
@@ -156,10 +187,13 @@ export const generateTransactionHashTool: McpTool = {
   handler: async (args: any) => {
     const { keyFilePath, serializedRawTransaction } = args;
     const account = getDecryptedAccount(keyFilePath);
+    const rawTx = TxnBuilderTypes.RawTransaction.deserialize(
+      new BCS.Deserializer(Uint8Array.from(Buffer.from(serializedRawTransaction.replace("0x", ""), "hex")))
+    );
     const hash = SupraClient.deriveTransactionHash(
       SupraClient.createSignedTransaction(
         account,
-        Uint8Array.from(Buffer.from(serializedRawTransaction.replace("0x", ""), "hex"))
+        rawTx
       )
     );
     return { hash };

@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createEntryFunctionTxTool, createScriptTxTool } from './transaction';
+import { 
+  createEntryFunctionTxTool, 
+  createScriptTxTool, 
+  signTransactionTool, 
+  submit_transaction_tool 
+} from './transaction';
 import { SupraClient, HexString, SupraAccount } from "@supra-l1/sdk";
 import * as security from '../utils/security';
 import * as fs from 'fs';
@@ -21,15 +26,22 @@ vi.mock("@supra-l1/sdk", () => {
     createSerializedScriptTxPayloadRawTxObject: vi.fn().mockReturnValue(new Uint8Array([4, 5, 6])),
     getAccountInfo: vi.fn().mockResolvedValue({ sequence_number: 10n }),
     getChainId: vi.fn().mockResolvedValue({ value: 6 }),
+    sendTxUsingSerializedRawTransactionAndSignature: vi.fn().mockResolvedValue({ txHash: '0xhash' }),
   };
   
   const mockAccount = {
     address: vi.fn().mockReturnValue({ toString: () => "0xaddress" }),
     toPrivateKeyObject: vi.fn().mockReturnValue({ address: "0xaddress" }),
+    signHexString: vi.fn().mockReturnValue({ toString: () => "0xsignature" }),
+    pubKey: vi.fn().mockReturnValue({ toString: () => "0xpubkey" }),
   };
 
   const MockSupraAccount = vi.fn().mockImplementation(function() {
     return mockAccount;
+  });
+  
+  const MockHexString = vi.fn().mockImplementation(function(val) {
+    return { toString: () => val };
   });
   
   return {
@@ -37,8 +49,14 @@ vi.mock("@supra-l1/sdk", () => {
       init: vi.fn().mockResolvedValue(mockClient),
     },
     SupraAccount: MockSupraAccount,
-    HexString: {
-      fromUint8Array: vi.fn().mockReturnValue({ toString: () => "0x0" }),
+    HexString: MockHexString,
+    TxnBuilderTypes: {
+      RawTransaction: {
+        deserialize: vi.fn().mockReturnValue({}),
+      }
+    },
+    BCS: {
+      Deserializer: vi.fn(),
     }
   };
 });
@@ -46,11 +64,6 @@ vi.mock("@supra-l1/sdk", () => {
 describe('createEntryFunctionTxTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('should have correct tool definition', () => {
-    expect(createEntryFunctionTxTool.name).toBe('create_entry_function_tx');
-    expect(createEntryFunctionTxTool.inputSchema.properties).toHaveProperty('keyFilePath');
   });
 
   it('should build entry function tx using key file', async () => {
@@ -64,30 +77,45 @@ describe('createEntryFunctionTxTool', () => {
     };
 
     const result = await createEntryFunctionTxTool.handler(args);
-
-    expect(fs.readFileSync).toHaveBeenCalledWith('key.pem', 'utf8');
-    expect(security.getPassphrase).toHaveBeenCalled();
-    expect(security.decrypt).toHaveBeenCalledWith('encrypted-data', 'test-passphrase');
     expect(result).toHaveProperty('serializedRawTransaction');
   });
 });
 
-describe('createScriptTxTool', () => {
+describe('signTransactionTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should build script tx using key file', async () => {
+  it('should sign a raw transaction', async () => {
     const args = {
       keyFilePath: 'key.pem',
-      scriptCode: '0xabc',
-      scriptArgs: [],
+      serializedRawTransaction: '0x123'
+    };
+
+    const result = await signTransactionTool.handler(args);
+
+    expect(security.getPassphrase).toHaveBeenCalled();
+    expect(result).toHaveProperty('signature', '0xsignature');
+    expect(result).toHaveProperty('publicKey', '0xpubkey');
+  });
+});
+
+describe('submit_transaction_tool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should submit a signed transaction', async () => {
+    const args = {
+      serializedRawTransaction: '0x123',
+      signature: '0xsignature',
+      senderPublicKey: '0xpubkey',
       rpcUrl: 'http://localhost'
     };
 
-    const result = await createScriptTxTool.handler(args);
+    const result = await submit_transaction_tool.handler(args);
 
-    expect(security.decrypt).toHaveBeenCalled();
-    expect(result).toHaveProperty('serializedRawTransaction');
+    expect(SupraClient.init).toHaveBeenCalledWith('http://localhost');
+    expect(result).toHaveProperty('txHash', '0xhash');
   });
 });

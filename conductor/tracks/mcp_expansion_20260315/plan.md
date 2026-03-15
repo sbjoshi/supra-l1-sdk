@@ -22,9 +22,9 @@
 
 
 ## Phase 3: Secure Signing and Submission
-- [ ] Task: Implement `sign_transaction` (standalone) using GUI prompt decryption.
-- [ ] Task: Implement `submit_transaction` for previously signed transactions.
-- [ ] Task: Write tests for the full secure workflow.
+- [x] Task: Implement `sign_transaction` (standalone) using GUI prompt decryption. [adca3b4]
+- [x] Task: Implement `submit_transaction` for previously signed transactions. [adca3b4]
+- [x] Task: Write tests for the full secure workflow. [adca3b4]
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Secure Signing and Submission' (Protocol in workflow.md)
 
 ## Phase 4: Finalization & Documentation

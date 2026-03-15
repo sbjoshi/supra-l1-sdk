@@ -375,7 +375,7 @@ export class SupraClient {
     return coinChangeParsed;
   }
 
-  private getTransactionInsights(
+  public getTransactionInsights(
     userAddress: string,
     txData: any,
   ): TransactionInsights {
@@ -455,7 +455,6 @@ export class SupraClient {
    * @returns `TransactionDetail` or `null`
    */
   async getTransactionDetail(
-    account: HexString,
     transactionHash: string,
   ): Promise<TransactionDetail | null> {
     let resData = await this.sendRequest({
@@ -490,7 +489,7 @@ export class SupraClient {
         blockNumber: undefined,
         blockHash: undefined,
         transactionInsights: this.getTransactionInsights(
-          account.toString(),
+          resData.data.header.sender.Move,
           resData.data,
         ),
         vm_status: undefined,
@@ -519,7 +518,7 @@ export class SupraClient {
       blockNumber: resData.data.block_header.height,
       blockHash: resData.data.block_header.hash,
       transactionInsights: this.getTransactionInsights(
-        account.toString(),
+        resData.data.header.sender.Move,
         resData.data,
       ),
       vm_status: resData.data.output.Move.vm_status,
