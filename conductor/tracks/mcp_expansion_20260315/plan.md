@@ -27,8 +27,5 @@
 - [x] Task: Write tests for the full secure workflow. [c8a4111]
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Secure Signing and Submission' (Protocol in workflow.md) [c8a4111]
 
-## Phase 4: Finalization & Documentation
-- [x] Task: Update MCP server `README.md` with security model details and OS dependencies (zenity, etc.). [8b59ba5]
-- [x] Task: Perform manual verification across different operating systems. [d38307d]
-- [x] Task: Conduct a final code review pass. [d38307d]
-- [x] Task: Conductor - User Manual Verification 'Phase 4: Finalization & Documentation' (Protocol in workflow.md) [d38307d]
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [df9542d]
