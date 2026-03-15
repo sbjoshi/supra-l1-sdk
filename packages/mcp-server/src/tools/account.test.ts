@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateAccountTool } from './account';
+import { generateAccountTool, deriveAccountTool } from './account';
 import { SupraAccount } from "@supra-l1/sdk";
 
 vi.mock("@scure/bip39", () => ({
@@ -12,16 +12,22 @@ vi.mock("@scure/bip39/wordlists/english", () => ({
 }));
 
 vi.mock("@supra-l1/sdk", () => {
+  const mockAccount = {
+    toPrivateKeyObject: vi.fn().mockReturnValue({
+      address: "0xaddress",
+      publicKeyHex: "0xpublic",
+      privateKeyHex: "0xprivate"
+    })
+  };
+  
+  const MockSupraAccount = vi.fn().mockImplementation(function() {
+    return mockAccount;
+  });
+  // @ts-ignore
+  MockSupraAccount.fromDerivePath = vi.fn().mockReturnValue(mockAccount);
+  
   return {
-    SupraAccount: {
-      fromDerivePath: vi.fn().mockImplementation(() => ({
-        toPrivateKeyObject: vi.fn().mockReturnValue({
-          address: "0xaddress",
-          publicKeyHex: "0xpublic",
-          privateKeyHex: "0xprivate"
-        })
-      })),
-    }
+    SupraAccount: MockSupraAccount
   };
 });
 
@@ -44,5 +50,39 @@ describe('generateAccountTool', () => {
     expect(result).toHaveProperty('privateKey', '0xprivate');
     expect(result).toHaveProperty('mnemonic');
     expect(result.mnemonic).toBe('test mnemonic');
+  });
+});
+
+describe('deriveAccountTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should have correct tool definition', () => {
+    expect(deriveAccountTool.name).toBe('derive_account');
+    expect(deriveAccountTool.description).toBe('Derive a Supra account from a mnemonic or private key');
+    expect(deriveAccountTool.inputSchema).toBeDefined();
+  });
+
+  it('should derive from mnemonic', async () => {
+    const args = {
+      mnemonic: 'test mnemonic',
+    };
+
+    const result = await deriveAccountTool.handler(args);
+
+    expect(SupraAccount.fromDerivePath).toHaveBeenCalledWith("m/44'/637'/0'/0'/0'", 'test mnemonic');
+    expect(result).toHaveProperty('address', '0xaddress');
+  });
+
+  it('should derive from private key', async () => {
+    const args = {
+      privateKey: '0xprivate',
+    };
+
+    const result = await deriveAccountTool.handler(args);
+
+    expect(SupraAccount).toHaveBeenCalled();
+    expect(result).toHaveProperty('address', '0xaddress');
   });
 });
