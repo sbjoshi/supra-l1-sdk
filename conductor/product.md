@@ -13,9 +13,12 @@ The `supra-l1-sdk` is a TypeScript SDK designed to provide a convenient and effi
 - **Comprehensive Functionality:** Support all major Supra chain operations, including coin transfers, package publishing, and transaction management.
 - **Type Safety:** Leverage TypeScript's type system to ensure code reliability and catch errors at compile-time.
 - **Cross-Platform Compatibility:** Support both Node.js and browser environments.
-- **Security:** Implement secure transaction signing and hash generation.
+- **Zero-Knowledge Security:** Guarantee that raw private keys and mnemonics are never exposed to LLMs or stored in remote logs through side-channel GUI prompts and local encrypted storage.
 
 ## Core Features
+- **MCP Server:** A Model Context Protocol server that exposes secure tools for AI agents to interact with the Supra blockchain.
+- **Secure Account Management:** Generate and import accounts using OS-native side-channel passphrase prompts.
+- **Encrypted Local Storage:** Securely store secrets in AES-256 encrypted local PEM files.
 - **RPC Node Integration:** Seamless communication with Supra RPC nodes.
 - **Transaction Insights:** Retrieve detailed information about blockchain transactions.
 - **Coin Transfers:** Facilitate easy and secure transfer of Supra coins.
