@@ -14,7 +14,7 @@ export const publishPackageTool: McpTool = {
     },
     required: ["senderPrivateKey", "packageMetadata", "modulesCode"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { senderPrivateKey, packageMetadata, modulesCode, rpcUrl = "https://rpc-testnet.supra.com/" } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const senderAccount = new SupraAccount(

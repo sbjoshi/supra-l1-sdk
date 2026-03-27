@@ -15,7 +15,7 @@ export const transferCoinTool: McpTool = {
     },
     required: ["senderPrivateKey", "receiverAddress", "amount", "coinType"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { senderPrivateKey, receiverAddress, amount, coinType, rpcUrl = "https://rpc-testnet.supra.com/" } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const senderAccount = new SupraAccount(
@@ -36,5 +36,29 @@ export const transferCoinTool: McpTool = {
       }
     );
     return result;
+  },
+};
+
+export const getBalanceTool: McpTool = {
+  name: "get_balance",
+  description: "Get the balance of a Supra account for a specific coin type",
+  inputSchema: {
+    type: "object",
+    properties: {
+      address: { type: "string", description: "Supra account address (hex)" },
+      coinType: { type: "string", description: "Type of coin to check balance for (default: 0x1::supra_coin::SupraCoin)", default: "0x1::supra_coin::SupraCoin" },
+      rpcUrl: { type: "string", description: "Supra RPC URL", default: "https://rpc-testnet.supra.com/" },
+    },
+    required: ["address"],
+  },
+  handler: async (args: any) => {
+    const { address, coinType = "0x1::supra_coin::SupraCoin", rpcUrl = "https://rpc-testnet.supra.com/" } = args;
+    const supraClient = await SupraClient.init(rpcUrl);
+    const balance = await supraClient.getAccountCoinBalance(new HexString(address), coinType);
+    return {
+      address,
+      coinType,
+      balance: balance.toString(),
+    };
   },
 };

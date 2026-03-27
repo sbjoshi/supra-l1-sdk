@@ -13,5 +13,3 @@
 - **tsup:** For bundling the SDK for different environments (Node.js and browser).
 - **TypeScript Compiler (tsc):** For static type checking and compilation.
 - **TypeDoc:** For generating high-quality documentation from the source code.
-- **Webpack:** For browser-specific bundling and optimizations.
-- **clean-webpack-plugin:** For cleaning the build directory before each build.

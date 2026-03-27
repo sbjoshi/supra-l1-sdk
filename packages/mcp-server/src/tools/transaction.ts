@@ -49,7 +49,7 @@ export const simulateTransactionTool: McpTool = {
     },
     required: ["serializedRawTransaction", "senderPublicKey", "rpcUrl"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { serializedRawTransaction, senderPublicKey, rpcUrl } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const result = await supraClient.simulateTxUsingSerializedRawTransaction(
@@ -92,7 +92,7 @@ export const createEntryFunctionTxTool: McpTool = {
     },
     required: ["keyFilePath", "moduleAddr", "moduleName", "functionName", "functionArgs", "rpcUrl"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { keyFilePath, moduleAddr, moduleName, functionName, typeArgs = [], functionArgs, rpcUrl } = args;
     const account = getDecryptedAccount(keyFilePath);
     const supraClient = await SupraClient.init(rpcUrl);
@@ -143,7 +143,7 @@ export const createScriptTxTool: McpTool = {
     },
     required: ["keyFilePath", "scriptCode", "rpcUrl"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { keyFilePath, scriptCode, typeArgs = [], scriptArgs = [], rpcUrl } = args;
     const account = getDecryptedAccount(keyFilePath);
     const supraClient = await SupraClient.init(rpcUrl);
@@ -192,7 +192,7 @@ export const signTransactionTool: McpTool = {
     },
     required: ["keyFilePath", "serializedRawTransaction"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { keyFilePath, serializedRawTransaction } = args;
     const account = getDecryptedAccount(keyFilePath);
     
@@ -223,7 +223,7 @@ export const submit_transaction_tool: McpTool = {
     },
     required: ["serializedRawTransaction", "signature", "senderPublicKey", "rpcUrl"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { serializedRawTransaction, signature, senderPublicKey, rpcUrl } = args;
     const supraClient = await SupraClient.init(rpcUrl);
     const result = await supraClient.sendTxUsingSerializedRawTransactionAndSignature(
@@ -250,7 +250,7 @@ export const generateTransactionHashTool: McpTool = {
     },
     required: ["keyFilePath", "serializedRawTransaction"],
   },
-  handler: async (args: Record<string, unknown>) => {
+  handler: async (args: any) => {
     const { keyFilePath, serializedRawTransaction } = args;
     const account = getDecryptedAccount(keyFilePath);
     const rawTx = TxnBuilderTypes.RawTransaction.deserialize(

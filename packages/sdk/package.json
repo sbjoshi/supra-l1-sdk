@@ -43,12 +43,11 @@
     "supra-l1-sdk-core": "^2.0.1"
   },
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "@vitest/coverage-v8": "^4.1.0",
-    "clean-webpack-plugin": "^4.0.0",
     "tsup": "^8.0.1",
-    "typedoc": "^0.25.13",
+    "typedoc": "^0.28.18",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.0",
-    "webpack": "^5.89.0"
+    "vitest": "^4.1.0"
   }
 }

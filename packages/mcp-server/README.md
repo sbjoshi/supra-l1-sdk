@@ -22,33 +22,53 @@ This server provides tools and resources to:
 - **Build, sign, and submit** complex Move transactions.
 - **Inspect** account information and transaction insights.
 
-## Setup
+## Integration with LLMs
 
-### Prerequisites
-- Node.js (v18 or higher)
-- **Linux Users**: `sudo apt install zenity`
+### 1. Claude Desktop
+To use this server with Claude Desktop, add it to your configuration file:
 
-### Installation
-1. Clone and install:
-   ```bash
-   git clone https://github.com/your-repo/supra-l1-sdk.git
-   cd supra-l1-sdk
-   npm install
-   ```
-2. Build:
-   ```bash
-   npm run build
-   ```
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add the following to the `mcpServers` object:
+```json
+{
+  "mcpServers": {
+    "supra-l1": {
+      "command": "node",
+      "args": ["/path/to/supra-l1-sdk/packages/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+*Note: Ensure you have run `npm run build` in the project root first.*
+
+**To List Tools in Claude**:
+- Click the 🔨 (hammer) icon in the chat interface.
+- Or ask: *"What tools can you use from the supra-l1 server?"*
+
+### 2. Gemini CLI
+To add this server to the Gemini CLI:
+```bash
+gemini mcp add supra-l1 node /path/to/supra-l1-sdk/packages/mcp-server/dist/index.js
+```
+
+**To List Tools in Gemini CLI**:
+- In interactive mode, type: `/tools`
+- Or ask: *"List your available tools"*
 
 ## Usage
 
 ### Tools
+AI agents can call these tools to perform actions.
 
 | Tool | Description | Key Parameters |
 |------|-------------|------------|
 | `generate_account` | Create new account | `mnemonicPath`, `keyFilePath` |
 | `import_account` | Secure existing account | `mnemonic`/`privateKey`, `keyFilePath` |
 | `fund_account` | Request testnet tokens | `address`, `rpcUrl` |
+| `get_balance` | Get account balance | `address`, `coinType` (optional), `rpcUrl` (optional) |
+| `transfer_coin` | Transfer coins | `senderPrivateKey`, `receiverAddress`, `amount`, `coinType`, `rpcUrl` (optional) |
 | `create_entry_function_tx` | Build entry function tx | `keyFilePath`, `moduleAddr`, `functionArgs` (typed) |
 | `create_script_tx` | Build script tx | `keyFilePath`, `scriptCode`, `scriptArgs` (typed) |
 | `sign_transaction` | Sign a raw transaction | `keyFilePath`, `serializedRawTransaction` |
@@ -56,14 +76,20 @@ This server provides tools and resources to:
 | `generate_transaction_hash` | Get tx hash | `keyFilePath`, `serializedRawTransaction` |
 
 > **Note on `functionArgs` / `scriptArgs`**: Arguments must be typed objects, e.g., `[{"type": "address", "value": "0x..."}, {"type": "u64", "value": "1000"}]`.
-
 ### Resources
+AI agents can read these resources to query blockchain state.
 
 | URI Template | Description |
 |--------------|-------------|
 | `supra://account/{address}/info` | Basic information about a Supra account |
 | `supra://account/{address}/resources` | All resources owned by a Supra account |
 | `supra://transaction/{hash}/insights` | Detailed insights about a Supra transaction |
+
+**To Use Resources in LLMs**:
+- **Claude**: Tell the agent: *"Read the resource at supra://account/0x.../info"*
+- **Gemini CLI**: Type: `/resources` to list them or simply ask: *"What are the resources on account 0x...?"*
+
+## Setup
 
 ## Development
 
